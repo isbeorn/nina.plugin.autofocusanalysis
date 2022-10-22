@@ -1,0 +1,247 @@
+﻿<ResourceDictionary
+    x:Class="AutofocusAnalysis.Options"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:AutofocusAnalysis"
+    xmlns:ninactrl="clr-namespace:NINACustomControlLibrary;assembly=NINACustomControlLibrary"
+    xmlns:oxy="clr-namespace:OxyPlot.Wpf;assembly=OxyPlot.Wpf">
+    <!--  This data template will be displayed in N.I.N.A. on the options->plugin tab with the datacontext of the TestPlugin instance  -->
+    <!--  In order for this datatemplate to be picked correctly, the key has to follow the naming convention of <IPlugin.Name>_Options -->
+    <!--  Furthermore the Resource Dictionary has to be exported via code behind export attributes  -->
+    <DataTemplate x:Key="Autofocus Report Analysis_Options">
+        <Grid
+            Margin="5"
+            VerticalAlignment="Stretch"
+            Background="{StaticResource BackgroundBrush}">
+
+            <Grid.Resources>
+
+                <local:EnumerableNullReplaceConverter x:Key="EnumerableNullReplaceConverter" />
+                <local:NullReplaceConverter x:Key="NullReplaceConverter" />
+            </Grid.Resources>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <StackPanel Orientation="Horizontal">
+                <Button Width="50" Command="{Binding LoadFolderCommand}">
+                    <TextBlock VerticalAlignment="Center" Text="..." />
+                </Button>
+                <TextBlock
+                    Margin="5,0,0,0"
+                    VerticalAlignment="Center"
+                    Text="&lt;-- Click the button and select a folder containing the autofocus report JSON files"
+                    Visibility="{Binding SelectedPath, Converter={StaticResource InverseNullToVisibilityCollapsedConverter}}" />
+            </StackPanel>
+            <StackPanel
+                Grid.Row="1"
+                Margin="0,10,0,0"
+                Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Text="Filter" />
+                <ComboBox
+                    Width="100"
+                    Margin="5,0,0,0"
+                    IsEnabled="{Binding SelectedPath, Converter={StaticResource InverseNullToBooleanConverter}}"
+                    ItemsSource="{Binding Filters}"
+                    SelectedItem="{Binding SelectedFilter}" />
+                <TextBlock
+                    Margin="10,0,0,0"
+                    VerticalAlignment="Center"
+                    Text="Date from" />
+                <ComboBox
+                    Width="100"
+                    Margin="5,0,0,0"
+                    IsEnabled="{Binding SelectedPath, Converter={StaticResource InverseNullToBooleanConverter}}"
+                    ItemsSource="{Binding Dates, Converter={StaticResource EnumerableNullReplaceConverter}, ConverterParameter='(All Dates)'}"
+                    SelectedItem="{Binding SelectedDateFrom, Converter={StaticResource NullReplaceConverter}, ConverterParameter='(All Dates)'}" />
+                <TextBlock
+                    Margin="10,0,0,0"
+                    VerticalAlignment="Center"
+                    Text="through" />
+                <ComboBox
+                    Width="100"
+                    Margin="5,0,0,0"
+                    IsEnabled="{Binding SelectedPath, Converter={StaticResource InverseNullToBooleanConverter}}"
+                    ItemsSource="{Binding Dates, Converter={StaticResource EnumerableNullReplaceConverter}, ConverterParameter='(All Dates)'}"
+                    SelectedItem="{Binding SelectedDateThru, Converter={StaticResource NullReplaceConverter}, ConverterParameter='(All Dates)'}" />
+
+                <TextBlock
+                    Margin="10,0,0,0"
+                    VerticalAlignment="Center"
+                    Text="R² &gt;" />
+                <TextBox
+                    MinWidth="30"
+                    Margin="5,0,0,0"
+                    IsEnabled="{Binding SelectedPath, Converter={StaticResource InverseNullToBooleanConverter}}"
+                    Text="{Binding RSquaredAbove}" />
+            </StackPanel>
+            <StackPanel
+                Grid.Row="2"
+                Margin="0,5,0,0"
+                Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Text="Temperature from" />
+                <ninactrl:UnitTextBox
+                    MinWidth="30"
+                    Margin="5,0,0,0"
+                    IsEnabled="{Binding SelectedPath, Converter={StaticResource InverseNullToBooleanConverter}}"
+                    Text="{Binding TemperatureFrom}"
+                    Unit="°C" />
+                <TextBlock
+                    Margin="5,0,0,0"
+                    VerticalAlignment="Center"
+                    Text="through" />
+                <ninactrl:UnitTextBox
+                    MinWidth="30"
+                    Margin="5,0,0,0"
+                    IsEnabled="{Binding SelectedPath, Converter={StaticResource InverseNullToBooleanConverter}}"
+                    Text="{Binding TemperatureThrough}"
+                    Unit="°C" />
+            </StackPanel>
+            <StackPanel
+                Grid.Row="3"
+                Margin="0,5,0,0"
+                Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Text="Position from" />
+                <ninactrl:UnitTextBox
+                    MinWidth="30"
+                    Margin="5,0,0,0"
+                    IsEnabled="{Binding SelectedPath, Converter={StaticResource InverseNullToBooleanConverter}}"
+                    Text="{Binding PositionFrom}"
+                    Unit="steps" />
+                <TextBlock
+                    Margin="5,0,0,0"
+                    VerticalAlignment="Center"
+                    Text="through" />
+                <ninactrl:UnitTextBox
+                    MinWidth="30"
+                    Margin="5,0,0,0"
+                    IsEnabled="{Binding SelectedPath, Converter={StaticResource InverseNullToBooleanConverter}}"
+                    Text="{Binding PositionThrough}"
+                    Unit="steps" />
+            </StackPanel>
+
+            <oxy:Plot
+                Grid.Row="4"
+                MinHeight="300"
+                Margin="0,5,0,0"
+                Background="{StaticResource BackgroundBrush}"
+                DataContext="{Binding}"
+                LegendBackground="{Binding Path=Color, Source={StaticResource BackgroundBrush}}"
+                LegendBorder="{Binding Path=Color, Source={StaticResource BorderBrush}}"
+                LegendOrientation="Vertical"
+                LegendPosition="BottomLeft"
+                LegendTextColor="{Binding Path=Color, Source={StaticResource PrimaryBrush}}"
+                PlotAreaBackground="{StaticResource BackgroundBrush}"
+                PlotAreaBorderColor="{Binding Path=Color, Source={StaticResource BorderBrush}}">
+                <oxy:Plot.Axes>
+                    <oxy:LinearAxis
+                        Key="FocuserPosition"
+                        Title="Calculated Position (steps)"
+                        AxisTitleDistance="5"
+                        AxislineColor="{Binding Path=Color, Source={StaticResource PrimaryBrush}}"
+                        IsPanEnabled="False"
+                        IsZoomEnabled="False"
+                        MajorGridlineColor="{Binding Path=Color, Source={StaticResource PrimaryBrush}, Converter={StaticResource SetAlphaToColorConverter}, ConverterParameter=100}"
+                        MinorGridlineColor="{Binding Path=Color, Source={StaticResource PrimaryBrush}, Converter={StaticResource SetAlphaToColorConverter}, ConverterParameter=50}"
+                        Position="Left"
+                        TextColor="{Binding Path=Color, Source={StaticResource PrimaryBrush}}"
+                        TicklineColor="{Binding Path=Color, Source={StaticResource SecondaryBrush}}"
+                        TitleColor="{Binding Path=Color, Source={StaticResource PrimaryBrush}}" />
+                    <oxy:LinearAxis
+                        Key="Temperature"
+                        Title="Temperature (°C)"
+                        AxislineColor="{Binding Path=Color, Source={StaticResource PrimaryBrush}}"
+                        IsPanEnabled="False"
+                        IsZoomEnabled="False"
+                        MajorGridlineColor="{Binding Path=Color, Source={StaticResource PrimaryBrush}, Converter={StaticResource SetAlphaToColorConverter}, ConverterParameter=100}"
+                        MinorGridlineColor="{Binding Path=Color, Source={StaticResource PrimaryBrush}, Converter={StaticResource SetAlphaToColorConverter}, ConverterParameter=50}"
+                        Position="Bottom"
+                        TextColor="{Binding Path=Color, Source={StaticResource PrimaryBrush}}"
+                        TicklineColor="{Binding Path=Color, Source={StaticResource SecondaryBrush}}"
+                        TitleColor="{Binding Path=Color, Source={StaticResource PrimaryBrush}}" />
+                </oxy:Plot.Axes>
+                <oxy:Plot.Series>
+                    <oxy:ScatterErrorSeries
+                        DataFieldErrorY="ErrorMargin"
+                        DataFieldX="Temperature"
+                        DataFieldY="CalculatedFocusPoint.Position"
+                        ErrorBarColor="{Binding Path=Color, Source={StaticResource NotificationErrorBrush}}"
+                        ErrorBarStopWidth="2"
+                        ErrorBarStrokeThickness="2"
+                        ItemsSource="{Binding FilteredAutoFocusReports}"
+                        MarkerFill="{Binding Path=Color, Source={StaticResource NotificationWarningBrush}}"
+                        MarkerSize="2"
+                        MarkerType="Circle"
+                        MinimumErrorSize="2"
+                        TrackerKey="AFPoint"
+                        XAxisKey="Temperature"
+                        YAxisKey="FocuserPosition" />
+                </oxy:Plot.Series>
+                <oxy:Plot.Annotations>
+                    <oxy:LineAnnotation
+                        Intercept="{Binding Trend.Offset}"
+                        Slope="{Binding Trend.Slope}"
+                        Color="{Binding Path=Color, Source={StaticResource PrimaryBrush}}" />
+                </oxy:Plot.Annotations>
+                <oxy:Plot.TrackerDefinitions>
+                    <oxy:TrackerDefinition TrackerKey="AFPoint">
+                        <oxy:TrackerDefinition.TrackerTemplate>
+                            <ControlTemplate>
+                                <oxy:TrackerControl
+                                    Background="{StaticResource BackgroundBrush}"
+                                    BorderBrush="{StaticResource BorderBrush}"
+                                    BorderThickness="1"
+                                    LineExtents="{Binding PlotModel.PlotArea}"
+                                    Position="{Binding Position}">
+                                    <oxy:TrackerControl.Content>
+                                        <StackPanel Orientation="Vertical">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="Timestamp: " />
+                                                <TextBlock Text="{Binding Item.Timestamp}" />
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="Temperature: " />
+                                                <TextBlock Text="{Binding Item.Temperature}" />
+                                                <TextBlock Text=" °C" />
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="Focus Position: " />
+                                                <TextBlock Text="{Binding Item.CalculatedFocusPoint.Position}" />
+                                                <TextBlock Text=" steps" />
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="Initial Position: " />
+                                                <TextBlock Text="{Binding Item.InitialFocusPoint.Position}" />
+                                                <TextBlock Text=" steps" />
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="Hyperbolic R²: " />
+                                                <TextBlock Text="{Binding Item.RSquares.Hyperbolic}" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </oxy:TrackerControl.Content>
+                                </oxy:TrackerControl>
+                            </ControlTemplate>
+                        </oxy:TrackerDefinition.TrackerTemplate>
+                    </oxy:TrackerDefinition>
+                </oxy:Plot.TrackerDefinitions>
+            </oxy:Plot>
+            <StackPanel
+                Grid.Row="5"
+                Orientation="Horizontal"
+                Visibility="{Binding SelectedPath, Converter={StaticResource NullToVisibilityCollapsedConverter}}">
+                <TextBlock FontSize="16" Text="Slope " />
+                <TextBlock FontSize="16" Text="{Binding Trend.Slope, StringFormat=\{0:0.0000\}}" />
+                <TextBlock FontSize="16" Text=" steps/°C  |  Offset " />
+                <TextBlock FontSize="16" Text="{Binding Trend.Offset, StringFormat=\{0:0.0000\}}" />
+                <TextBlock FontSize="16" Text="  |  R² " />
+                <TextBlock FontSize="16" Text="{Binding Trend.RSquared, StringFormat=\{0:0.0000\}}" />
+            </StackPanel>
+        </Grid>
+    </DataTemplate>
+</ResourceDictionary>
