@@ -61,7 +61,7 @@ namespace AutofocusAnalysis {
 
             positionFrom = 0;
             positionThrough = 1000000;
-            temperatureFrom = -20;
+            temperatureFrom = -50;
             temperatureThrough = 50;
             rSquaredAbove = 0.7;
             Dates = new AsyncObservableCollection<DateTime?>();
