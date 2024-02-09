@@ -35,7 +35,7 @@ pipelines:
               - dotnet build -c Release
               
               ## Copy relevant files to packaging folder
-              - cp bin/Release/net8.0-windows/${PLUGIN_DLL_NAME}.dll ${BITBUCKET_CLONE_DIR}/packages/${PLUGIN_DLL_NAME}.dll
+              - cp "bin/Release/net8.0-windows/${PLUGIN_DLL_NAME}.dll" "${BITBUCKET_CLONE_DIR}/packages/${PLUGIN_DLL_NAME}.dll"
 
             artifacts:
               - packages/**
@@ -45,7 +45,7 @@ pipelines:
             image: mcr.microsoft.com/powershell:latest
             script:
               ## Create manifest json and upload to bitbucket downloads
-              - pwsh ${BITBUCKET_CLONE_DIR}/artifacts/CreateNET7Manifest.ps1 -file ${BITBUCKET_CLONE_DIR}/packages/${PLUGIN_DLL_NAME}.dll -createArchive -includeAll -appendVersionToArchive -uploadToBitbucket -bitbucketUserName $BITBUCKET_USERNAME -bitbucketPassword $BITBUCKET_APP_PASSWORD -bitbucketRepositoryOwner $BITBUCKET_USERNAME -bitbucketRepository $BITBUCKET_REPO_SLUG
+              - pwsh ${BITBUCKET_CLONE_DIR}/artifacts/CreateNET7Manifest.ps1 -file "${BITBUCKET_CLONE_DIR}/packages/${PLUGIN_DLL_NAME}.dll" -createArchive -includeAll -appendVersionToArchive -uploadToBitbucket -bitbucketUserName $BITBUCKET_USERNAME -bitbucketPassword $BITBUCKET_APP_PASSWORD -bitbucketRepositoryOwner $BITBUCKET_USERNAME -bitbucketRepository $BITBUCKET_REPO_SLUG
               # Output manifest json
               - cat manifest.json
               ## Copy manifest to artifacts folder 
