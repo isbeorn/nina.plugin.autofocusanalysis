@@ -1,5 +1,6 @@
 ﻿using AutofocusAnalysis.Properties;
 using Newtonsoft.Json;
+using NINA.Core.Enum;
 using NINA.Core.Model;
 using NINA.Core.Utility;
 using NINA.Image.ImageData;
@@ -60,7 +61,7 @@ namespace AutofocusAnalysis {
 
             positionFrom = 0;
             positionThrough = 1000000;
-            temperatureFrom = -20;
+            temperatureFrom = -50;
             temperatureThrough = 50;
             rSquaredAbove = 0.7;
             Dates = new AsyncObservableCollection<DateTime?>();
@@ -227,16 +228,41 @@ namespace AutofocusAnalysis {
         }
 
         private void RefreshChart() {
-            FilteredAutoFocusReports = AutoFocusReports.Where(x =>
-                x.Filter == SelectedFilter
+            FilteredAutoFocusReports = AutoFocusReports.Where(x => {
+                var couldParse = Enum.TryParse(typeof(AFCurveFittingEnum), x.Fitting, out var fitting);
+                var goodR2 = true;
+                if (couldParse) {
+                    var hyperbolicGood = (x.RSquares?.Hyperbolic ?? 0) > RSquaredAbove;
+                    var quadraticGood = (x.RSquares?.Quadratic ?? 0) > RSquaredAbove;
+                    var trendlineGood = (x.RSquares?.LeftTrend ?? 0) > RSquaredAbove && (x.RSquares?.RightTrend ?? 0) > RSquaredAbove;
+                    switch (fitting) {
+                        case AFCurveFittingEnum.HYPERBOLIC:
+                        case AFCurveFittingEnum.TRENDHYPERBOLIC:
+                            goodR2 = hyperbolicGood;
+                            break;
+
+                        case AFCurveFittingEnum.PARABOLIC:
+                        case AFCurveFittingEnum.TRENDPARABOLIC:
+                            goodR2 = quadraticGood;
+                            break;
+
+                        case AFCurveFittingEnum.TRENDLINES:
+                            goodR2 = trendlineGood;
+                            break;
+                    }
+                } else {
+                    Logger.Warning($"Unknown AFCurveFitting value ${x.Fitting}. Ignoring R Square filter");
+                }
+
+                return x.Filter == SelectedFilter
                 && x.Temperature < TemperatureThrough
                 && x.Temperature > TemperatureFrom
                 && x.CalculatedFocusPoint.Position < PositionThrough
                 && x.CalculatedFocusPoint.Position > PositionFrom
-                && (x?.RSquares?.Hyperbolic ?? 1) > RSquaredAbove
+                && goodR2
                 && (SelectedDateFrom == null ? true : x.Timestamp.Date >= SelectedDateFrom)
-                && (SelectedDateThru == null ? true : x.Timestamp.Date <= SelectedDateThru)
-            );
+                && (SelectedDateThru == null ? true : x.Timestamp.Date <= SelectedDateThru);
+            });
 
             try {
                 Trend = new Trendline(FilteredAutoFocusReports.Select(x => new ScatterErrorPoint(x.Temperature, x.CalculatedFocusPoint.Position, 1, 1)));
@@ -269,7 +295,9 @@ namespace AutofocusAnalysis {
                             }
                             AutoFocusReports.Add(report);
                         }
-                    } catch (Exception) { }
+                    } catch (Exception ex) {
+                        Logger.Error($"Failed to load json {file}", ex);
+                    }
                     RaisePropertyChanged(nameof(AutoFocusReports));
                 }
             }
