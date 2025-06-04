@@ -251,7 +251,7 @@ namespace AutofocusAnalysis {
                             break;
                     }
                 } else {
-                    Logger.Warning($"Unknown AFCurfeFitting value ${x.Fitting}. Ignoring R Square filter");
+                    Logger.Warning($"Unknown AFCurveFitting value ${x.Fitting}. Ignoring R Square filter");
                 }
 
                 return x.Filter == SelectedFilter
@@ -295,7 +295,9 @@ namespace AutofocusAnalysis {
                             }
                             AutoFocusReports.Add(report);
                         }
-                    } catch (Exception) { }
+                    } catch (Exception ex) {
+                        Logger.Error($"Failed to load json {file}", ex);
+                    }
                     RaisePropertyChanged(nameof(AutoFocusReports));
                 }
             }
