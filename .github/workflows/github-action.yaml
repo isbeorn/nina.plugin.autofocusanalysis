@@ -29,7 +29,7 @@ jobs:
       - name: Prepare folders
         run: |
           mkdir packages
-          mkdir packages/${{ env.PLUGIN_NAME }}
+          mkdir "packages/${{ env.PLUGIN_NAME }}"
 
       # This will build your solution. If the solution name differs from your plugin name, please adjust it here
       - name: Build .NET Assemblies
