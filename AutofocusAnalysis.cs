@@ -228,7 +228,7 @@ namespace AutofocusAnalysis {
         }
 
         private void RefreshChart() {
-            FilteredAutoFocusReports = AutoFocusReports.Where(x => {
+            var filteredAutoFocusReports = AutoFocusReports.Where(x => {
                 var couldParse = Enum.TryParse(typeof(AFCurveFittingEnum), x.Fitting, out var fitting);
                 var goodR2 = true;
                 if (couldParse) {
@@ -254,20 +254,27 @@ namespace AutofocusAnalysis {
                     Logger.Warning($"Unknown AFCurveFitting value ${x.Fitting}. Ignoring R Square filter");
                 }
 
-                return x.Filter == SelectedFilter
-                && x.Temperature < TemperatureThrough
-                && x.Temperature > TemperatureFrom
-                && x.CalculatedFocusPoint.Position < PositionThrough
-                && x.CalculatedFocusPoint.Position > PositionFrom
+                return x?.CalculatedFocusPoint != null
+                && x.Filter == SelectedFilter
+                && x.Temperature <= TemperatureThrough
+                && x.Temperature >= TemperatureFrom
+                && x.CalculatedFocusPoint.Position <= PositionThrough
+                && x.CalculatedFocusPoint.Position >= PositionFrom
                 && goodR2
                 && (SelectedDateFrom == null ? true : x.Timestamp.Date >= SelectedDateFrom)
                 && (SelectedDateThru == null ? true : x.Timestamp.Date <= SelectedDateThru);
-            });
+            }).ToArray();
 
-            try {
-                Trend = new Trendline(FilteredAutoFocusReports.Select(x => new ScatterErrorPoint(x.Temperature, x.CalculatedFocusPoint.Position, 1, 1)));
-            } catch (Exception ex) {
+            FilteredAutoFocusReports = filteredAutoFocusReports;
+
+            if (filteredAutoFocusReports.Length < 2) {
                 Trend = null;
+            } else {
+                try {
+                    Trend = new Trendline(filteredAutoFocusReports.Select(x => new ScatterErrorPoint(x.Temperature, x.CalculatedFocusPoint.Position, 1, 1)));
+                } catch (Exception) {
+                    Trend = null;
+                }
             }
 
             RaisePropertyChanged(nameof(FilteredAutoFocusReports));
@@ -281,12 +288,20 @@ namespace AutofocusAnalysis {
             Filters.Clear();
             Dates.Clear();
             Dates.Add(null);
-            foreach (var file in Directory.GetFiles(path, "*.json")) {
-                using (var reader = File.OpenText(file)) {
-                    try {
+            string[] files;
+            try {
+                files = Directory.GetFiles(path, "*.json");
+            } catch (Exception ex) {
+                Logger.Error($"Failed to enumerate autofocus reports in {path}", ex);
+                files = Array.Empty<string>();
+            }
+
+            foreach (var file in files) {
+                try {
+                    using (var reader = File.OpenText(file)) {
                         var text = await reader.ReadToEndAsync();
                         var report = JsonConvert.DeserializeObject<AutoFocusReport>(text);
-                        if (report != null) {
+                        if (report?.CalculatedFocusPoint != null) {
                             if (!Dates.Contains(report.Timestamp.Date)) {
                                 Dates.Add(report.Timestamp.Date);
                             }
@@ -294,12 +309,14 @@ namespace AutofocusAnalysis {
                                 Filters.Add(report.Filter);
                             }
                             AutoFocusReports.Add(report);
+                        } else {
+                            Logger.Warning($"Skipping autofocus report without a calculated focus point: {file}");
                         }
-                    } catch (Exception ex) {
-                        Logger.Error($"Failed to load json {file}", ex);
                     }
-                    RaisePropertyChanged(nameof(AutoFocusReports));
+                } catch (Exception ex) {
+                    Logger.Error($"Failed to load json {file}", ex);
                 }
+                RaisePropertyChanged(nameof(AutoFocusReports));
             }
             RaisePropertyChanged(nameof(Dates));
             SelectedDateFrom = null;
@@ -332,7 +349,7 @@ namespace AutofocusAnalysis {
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
-            return value.Equals(parameter) ? null : value;
+            return object.Equals(value, parameter) ? null : value;
         }
     }
 }
